@@ -1,0 +1,27 @@
+{
+  "name": "whiss-pylon",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Generated with `npm create pylon`",
+  "scripts": {
+    "dev": "pylon dev -c 'bun run .pylon/index.js'",
+    "build": "pylon build"
+  },
+  "dependencies": {
+    "@cloudflare/ai": "^1.2.2",
+    "@getcronit/pylon": "^2.0.0-beta.7",
+    "bun-types": "^1.1.27",
+    "bun": "^1.1.27",
+    "hono": "^v4.6.2"
+  },
+  "devDependencies": {
+    "@getcronit/pylon-dev": "^1.0.0-beta.8",
+    "typescript": "^5.5.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/netsnek/whiss-pylon.git"
+  },
+  "homepage": "https://netsnek.com"
+}
