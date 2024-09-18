@@ -234,49 +234,6 @@ window.onload = function() {
 };
 
     </script>
-<script type="text/javascript">
-  (function() {
-    const originalLog = console.log;
-    const originalError = console.error;
-
-    // Function to append logs to the #console-log div
-    function appendToConsoleDiv(message, type = 'log') {
-      const consoleDiv = document.getElementById('console-log');
-      const newLogEntry = document.createElement('div');
-      newLogEntry.style.color = type === 'log' ? 'black' : 'red';
-      newLogEntry.textContent = message;
-      consoleDiv.appendChild(newLogEntry);
-
-      // Scroll to bottom of the console div
-      consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    }
-
-    // Override console.log
-    console.log = function(...args) {
-      originalLog.apply(console, args);
-      appendToConsoleDiv(args.join(' '), 'log');
-    };
-
-    // Override console.error
-    console.error = function(...args) {
-      originalError.apply(console, args);
-      appendToConsoleDiv(args.join(' '), 'error');
-    };
-
-  })();
-</script>
-    
-        <style>
-          #console-log {
-            background-color: #333;
-            color: #fff;
-            padding: 10px;
-            margin-top: 20px;
-            height: 200px;
-            overflow-y: scroll;
-            font-family: monospace;
-          }
-        </style>
     <style>
       .iframe-container {
   overflow: hidden;
@@ -321,6 +278,51 @@ li button {
     </style>
   </head>
   <body>
+    <div id="console-log" style="height: 200px; overflow-y: scroll; background-color: #f8f9fa; border: 1px solid #ced4da; padding: 10px;"></div>
+
+    <script>
+      // Function to log messages to the console-log div
+      function logToConsoleDiv(message, isError = false) {
+        const logDiv = document.getElementById('console-log');
+        const logEntry = document.createElement('div');
+        logEntry.textContent = message;
+    
+        if (isError) {
+          logEntry.style.color = 'red';  // Highlight errors in red
+        }
+    
+        logDiv.appendChild(logEntry);
+        logDiv.scrollTop = logDiv.scrollHeight; // Auto scroll to the latest log
+      }
+    
+      // Override console.log
+      console.log = (function(origLog) {
+        return function(...args) {
+          origLog.apply(console, args);
+          logToConsoleDiv(args.join(' '));  // Display in console-log div
+        };
+      })(console.log);
+    
+      // Override console.error
+      console.error = (function(origError) {
+        return function(...args) {
+          origError.apply(console, args);
+          logToConsoleDiv(args.join(' '), true);  // Display errors in red in console-log div
+        };
+      })(console.error);
+    
+      // Capture uncaught errors
+      window.onerror = function(message, source, lineno, colno, error) {
+        logToConsoleDiv(`Error: ${message} at ${source}:${lineno}:${colno}`, true);
+        return true; // Prevent the default browser error handling
+      };
+    
+      // Capture unhandled promise rejections
+      window.addEventListener('unhandledrejection', function(event) {
+        logToConsoleDiv('Unhandled Promise Rejection: ' + event.reason, true);
+      });
+    
+    </script>
       <div id="fingerprintModal" class="modal" tabindex="-1" role="dialog">
           <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -466,13 +468,6 @@ li button {
       }
       initXTerm();
     </script>
-        <div id="console-log"></div>
-
-        <script>
-          // Example usage of console.log
-          console.log("WebSSH Client started");
-          console.log("Testing log mirroring to the console-log div");
-        </script>
     <noscript>
         SSH to your machine from anywhere with the SSH client running directly in your browser.
         WebSSH is SSH/SFTP client built on golang\'s SSH and SFTP library, compiled to Web Assembly to allow you to connect to your machine directly from your browser.
