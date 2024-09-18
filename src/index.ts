@@ -23,7 +23,7 @@ export const graphql = {
 }
 
 // Serve static files from the './public' directory
-app.use('/*', serveStatic({ root: './client/public' }))
+app.use('/*', serveStatic({ root: './client' }))
 
 const { upgradeWebSocket, websocket } = createBunWebSocket();
 

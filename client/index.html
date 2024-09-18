@@ -1,0 +1,141 @@
+<html>
+<head>
+    <script src="js/defines.js"></script>
+    <script src="js/src/BigInteger.min.js"></script>
+    <script src="js/src/Hash.min.js"></script>
+    <script src="js/src/aes.min.js"></script>
+    <script src="js/src/randomart.js"></script>
+    <script src="js/src/struct.min.js"></script>
+    <script src="js/src/utilities.min.js"></script>
+    <script src="js/dhKex.js"></script>
+    <script src="js/transport.js"></script>
+    <script src="js/src/xterm-addon-fit.js"></script>
+    <script src="js/auth_handler.js"></script>
+    <script src="js/crypto.js"></script>
+    <script src="js/message.js"></script>
+    <script src="js/parceler.js"></script>
+    <script src="js/rsaKey.js"></script>
+    <script src="js/src/xterm.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/SSHyClient.js"></script>
+	<script type="text/javascript">
+		// Stores timeouts for window.onresize()
+		var resizeInterval;
+		window.onload = function() {
+			// After the page loads start up the SSH client
+			startSSHy();
+		};
+		// Sets up a bind for every time the web browser is resized
+		window.onresize = function(){
+			clearTimeout(resizeInterval);
+			resizeInterval = setTimeout(resize, 400);
+		};
+		// Run every time the page is refreshed / closed to disconnect from the SSH server
+		window.onbeforeunload = function() {
+			if (ws || transport) {
+				transport.disconnect();
+			}
+		};
+	</script>
+	<script type="text/javascript">
+		setProxyEncoding("binary");
+	</script>
+	<link rel="stylesheet" href="css/xterm.css" />
+	<link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+    <div id="console-log" style="height: 200px; overflow-y: scroll; background-color: #f8f9fa; border: 1px solid #ced4da; padding: 10px;"></div>
+    <script>
+        // Function to log messages to the console-log div
+        function logToConsoleDiv(message, isError = false) {
+          const logDiv = document.getElementById('console-log');
+          const logEntry = document.createElement('div');
+          logEntry.textContent = message;
+      
+          if (isError) {
+            logEntry.style.color = 'red';  // Highlight errors in red
+          }
+      
+          logDiv.appendChild(logEntry);
+          logDiv.scrollTop = logDiv.scrollHeight; // Auto scroll to the latest log
+        }
+      
+        // Override console.log
+        console.log = (function(origLog) {
+          return function(...args) {
+            origLog.apply(console, args);
+            logToConsoleDiv(args.join(' '));  // Display in console-log div
+          };
+        })(console.log);
+      
+        // Override console.error
+        console.error = (function(origError) {
+          return function(...args) {
+            origError.apply(console, args);
+            logToConsoleDiv(args.join(' '), true);  // Display errors in red in console-log div
+          };
+        })(console.error);
+      
+        // Capture uncaught errors
+        window.onerror = function(message, source, lineno, colno, error) {
+          logToConsoleDiv(`Error: ${message} at ${source}:${lineno}:${colno}`, true);
+          return true; // Prevent the default browser error handling
+        };
+      
+        // Capture unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+          logToConsoleDiv('Unhandled Promise Rejection: ' + event.reason, true);
+        });
+      
+    </script>
+	<div id="terminal" style="height:100%;"></div>
+	<div id="settingsNav" class="sidenav">
+		<a href="javascript:;" class="closebtn" onclick="toggleNav(0)">&times;</a>
+		<span class="title large">Terminal Options</span>
+		<hr>
+		<span class="title" style="padding-top:20px">Font Size</span>
+		<a class="leftarrow" href="javascript:;" onclick="transport.settings.modFontSize(-1)">\<--</a>
+		<span class="middle" id="currentFontSize">16px</span>
+		<a class="rightarrow" href="javascript:;" onclick="transport.settings.modFontSize(1)">--\></a>
+		<span class="title" style="padding-top:40px">Terminal Size</span>
+		<span class="leftarrow">Cols:
+			<input type="number" id="termCols" min="5" oninput="transport.settings.modTerm(0, this.value)">
+		</span>
+		<span class="rightarrow">Rows:
+			<input type="number" id="termRows" min="5" oninput="transport.settings.modTerm(1, this.value)">
+		</span>
+		<span class="title" style="padding-top:60px;">Local Echo</span>
+		<a class="leftarrow" href="javascript:;" onclick="transport.settings.setLocalEcho(-1)">\<--</a>
+		<a class="rightarrow" href="javascript:;" onclick="transport.settings.setLocalEcho(1)">--\></a>
+		<div class="fileUpload btn btn-primary nomargin">
+			<span class="tooltiptext" style="visibility:visible;" id="autoEchoState">State: Enabled</span>
+			<span class="middle" id="currentLEcho">Force Off</span>
+		</div>
+		<span class="title" style="padding-top:50px">Colours</span>
+		<a class="leftarrow" href="javascript:;" onclick="transport.settings.cycleColorSchemes(0)">\<--</a>
+		<span class="middle" id="currentColor">Monokai</span>
+		<a class="rightarrow" href="javascript:;" onclick="transport.settings.cycleColorSchemes(1)">--\></a>
+		<div class="fileUpload btn btn-primary">
+			<span class="tooltiptext">Format: Xresources</span>
+			<span class="middle" style="width:220px;">Upload</span>
+			<input type="file" title=" " id="Xresources" class="upload" onchange="transport.settings.importXresources()" />
+		</div>
+		<span class="title" style="padding-top:20px;">Keep Alive</span>
+		<div class="fileUpload btn btn-primary">
+			<span class="tooltiptext">0 to disable</span>
+			<input type="number" class="large" id="keepAlive" onchange="transport.settings.setKeepAlive(this.value);" placeholder="0">
+			<span style="font-size:16px;"> seconds</span>
+		</div>
+		<span class="title" style="padding-top:20px;">Network Traffic</span>
+		<div class="netTraffic">
+			<span class="leftarrow brightgreen">rx: <span id="rxTraffic"></span></span>
+			<span class="rightarrow brightyellow">tx: <span id="txTraffic"></span></span>
+		</div>
+		<div id="hostKey" style="display: none;">
+			<span class="title" style="padding-top:20px;">Host Key</span>
+			<span id="hostKeyImg" class="hostKeyImg"></span>
+		</div>
+	</div>
+	<span id="gear" class="gear" style="visibility:visible;" onclick="toggleNav(250)">&#9881</span>
+</body>
+</html>
