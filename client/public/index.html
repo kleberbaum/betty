@@ -278,6 +278,51 @@ li button {
     </style>
   </head>
   <body>
+    <div id="console-log" style="height: 200px; overflow-y: scroll; background-color: #f8f9fa; border: 1px solid #ced4da; padding: 10px;"></div>
+
+    <script>
+      // Function to log messages to the console-log div
+      function logToConsoleDiv(message, isError = false) {
+        const logDiv = document.getElementById('console-log');
+        const logEntry = document.createElement('div');
+        logEntry.textContent = message;
+    
+        if (isError) {
+          logEntry.style.color = 'red';  // Highlight errors in red
+        }
+    
+        logDiv.appendChild(logEntry);
+        logDiv.scrollTop = logDiv.scrollHeight; // Auto scroll to the latest log
+      }
+    
+      // Override console.log
+      console.log = (function(origLog) {
+        return function(...args) {
+          origLog.apply(console, args);
+          logToConsoleDiv(args.join(' '));  // Display in console-log div
+        };
+      })(console.log);
+    
+      // Override console.error
+      console.error = (function(origError) {
+        return function(...args) {
+          origError.apply(console, args);
+          logToConsoleDiv(args.join(' '), true);  // Display errors in red in console-log div
+        };
+      })(console.error);
+    
+      // Capture uncaught errors
+      window.onerror = function(message, source, lineno, colno, error) {
+        logToConsoleDiv(`Error: ${message} at ${source}:${lineno}:${colno}`, true);
+        return true; // Prevent the default browser error handling
+      };
+    
+      // Capture unhandled promise rejections
+      window.addEventListener('unhandledrejection', function(event) {
+        logToConsoleDiv('Unhandled Promise Rejection: ' + event.reason, true);
+      });
+    
+    </script>
       <div id="fingerprintModal" class="modal" tabindex="-1" role="dialog">
           <div class="modal-dialog" role="document">
             <div class="modal-content">

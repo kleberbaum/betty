@@ -234,6 +234,49 @@ window.onload = function() {
 };
 
     </script>
+<script type="text/javascript">
+  (function() {
+    const originalLog = console.log;
+    const originalError = console.error;
+
+    // Function to append logs to the #console-log div
+    function appendToConsoleDiv(message, type = 'log') {
+      const consoleDiv = document.getElementById('console-log');
+      const newLogEntry = document.createElement('div');
+      newLogEntry.style.color = type === 'log' ? 'black' : 'red';
+      newLogEntry.textContent = message;
+      consoleDiv.appendChild(newLogEntry);
+
+      // Scroll to bottom of the console div
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    }
+
+    // Override console.log
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      appendToConsoleDiv(args.join(' '), 'log');
+    };
+
+    // Override console.error
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      appendToConsoleDiv(args.join(' '), 'error');
+    };
+
+  })();
+</script>
+    
+        <style>
+          #console-log {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: scroll;
+            font-family: monospace;
+          }
+        </style>
     <style>
       .iframe-container {
   overflow: hidden;
@@ -423,6 +466,13 @@ li button {
       }
       initXTerm();
     </script>
+        <div id="console-log"></div>
+
+        <script>
+          // Example usage of console.log
+          console.log("WebSSH Client started");
+          console.log("Testing log mirroring to the console-log div");
+        </script>
     <noscript>
         SSH to your machine from anywhere with the SSH client running directly in your browser.
         WebSSH is SSH/SFTP client built on golang\'s SSH and SFTP library, compiled to Web Assembly to allow you to connect to your machine directly from your browser.
