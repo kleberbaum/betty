@@ -27,7 +27,7 @@ Thumbs.db
 *.temp
 
 # Bun
-bun.lockb
+#bun.lockb
 
 # Pylon specific
 .pylon/
